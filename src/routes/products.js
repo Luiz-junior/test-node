@@ -39,7 +39,7 @@ const updateProduct = (req, res) => {
             .then(data => res.send({
                 status: 200,
                 response: 'Produto Atualizado :D',
-                data,
+                nModified: data.nModified,
             }))
             .catch(err => res.send(err));
     } else {
