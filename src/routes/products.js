@@ -1,16 +1,17 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 
-// const productData = require('../fakeAPI/product.json');
-const axios = require('axios');
-const baseUrl = 'http://localhost:3000/products';
+const Product = mongoose.model('Product');
 
 const getProduct = (req, res) => {
     const sku = req.params.sku;
+
     if (sku) {
-        const product = req.body;
-        product.inventory.quantity = +1;
-        res.send(product.inventory);
+        Product.find({ sku })
+            .then(data => res.send(data))
+            .catch(err => res.send(err));
+        // product.inventory.quantity = +1;
     } else {
         res.json({ response: 'Informe o sku para buscar o produto!' })
     }
@@ -18,20 +19,29 @@ const getProduct = (req, res) => {
 
 const createProduct = (req, res) => {
     if (req.body) {
-        const product = req.body;
-        axios.get(`${baseUrl}`, product)
-            .then((data) => res.send(data))
-            //.then((data) => res.send({ status: 200, response: 'Produto Cadastrado :D' }))
+        Product.create(req.body)
+            .then(data => res.send({
+                status: 200,
+                response: 'Produto Cadastrado :D',
+                data
+            }))
             .catch(err => res.send(err));
+
     } else {
-        res.json({ response: 'Não há produtos cadastrados' })
+        res.json({ response: 'Envie todas as propriedades do produto para cadastrar!' })
     }
 };
 
 const updateProduct = (req, res) => {
     const sku = req.params.sku;
     if (sku) {
-        res.send({ status: 200, response: 'Produto Atualizado :D' });
+        Product.updateOne({ sku }, req.body)
+            .then(data => res.send({
+                status: 200,
+                response: 'Produto Atualizado :D',
+                data,
+            }))
+            .catch(err => res.send(err));
     } else {
         res.json({ response: 'Informe o sku para atualizar o produto!' })
     }
@@ -40,7 +50,12 @@ const updateProduct = (req, res) => {
 const deleteProduct = (req, res) => {
     const sku = req.params.sku;
     if (sku) {
-        res.send({ status: 200, response: 'Produto Excluído', });
+        Product.deleteOne({ sku })
+            .then(data => res.send({
+                status: 200,
+                response: 'Produto Excluído',
+            }))
+            .catch(err => res.send(err));
     } else {
         res.json({ response: 'Informe o sku para excluir o produto!' })
     }
