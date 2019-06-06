@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const router = express.Router();
 
 const Product = mongoose.model('Product');
 
@@ -9,9 +8,20 @@ const getProduct = (req, res) => {
 
     if (sku) {
         Product.find({ sku })
-            .then(data => res.send(data))
+            .then(data => {
+                data.map(item => {
+                    const total = item.inventory.warehouses.reduce(function(a, b) {
+                        return a.quantity + b.quantity;
+                    });
+                    item.inventory.quantity = total;
+
+                    if(item.inventory.quantity > 0)
+                        item.isMarketable = true;
+                });
+
+                res.send(data);
+            })
             .catch(err => res.send(err));
-        // product.inventory.quantity = +1;
     } else {
         res.json({ response: 'Informe o sku para buscar o produto!' })
     }
@@ -19,14 +29,23 @@ const getProduct = (req, res) => {
 
 const createProduct = (req, res) => {
     if (req.body) {
-        Product.create(req.body)
-            .then(data => res.send({
-                status: 200,
-                response: 'Produto Cadastrado :D',
-                data
-            }))
+        const { sku } = req.body; 
+        console.log(sku);
+        Product.find({ sku })
+            .then(data => {
+                if(data.length === 0) {
+                    Product.create(req.body)
+                        .then(data => res.send({
+                            status: 200,
+                            response: 'Produto Cadastrado :D',
+                            data
+                        }))
+                        .catch(err => res.send(err));
+                } else {
+                    res.send({ response: "Já existe um produto com esse sku cadastrado!"})
+                };
+            })
             .catch(err => res.send(err));
-
     } else {
         res.json({ response: 'Envie todas as propriedades do produto para cadastrar!' })
     }

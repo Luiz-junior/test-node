@@ -1,7 +1,7 @@
 const express = require('express');
 const routes = express.Router();
 
-const product = require('./products');
+const product = require('../controllers/products');
 
 // routes product
 routes.get('/product/:sku?', product.getProduct);
